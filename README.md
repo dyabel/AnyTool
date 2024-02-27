@@ -15,15 +15,18 @@ pip install -r requirements.txt
 ```
 
 # 🔆 Data Preparation
+**ToolBench**
+
+Refer to [ToolBench](https://github.com/OpenBMB/ToolBench).
+
 **Prepare the API data**
+
+You should prepare the ToolBench data first. Make sure you have the directory of data/toolenv/tools
 ```
 python extract_api_details.py
 python extract_category_tool_details.py
 python extract_tool_database.py
 ```
-**ToolBench**
-
-Refer to [ToolBench](https://github.com/OpenBMB/ToolBench).
 
 **AnyToolBench**
 
