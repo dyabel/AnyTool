@@ -31,4 +31,4 @@ def extract_tool_data():
     return tool_data
 tool_data = extract_tool_data()
 print(tool_data.keys())
-json.dump(tool_data, open("tool_data_add_nonfree.json", "w", encoding='utf-8'), indent=4)
+json.dump(tool_data, open("tool_data.json", "w", encoding='utf-8'), indent=4)

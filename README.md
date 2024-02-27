@@ -14,7 +14,13 @@ Require Python 3.9+
 pip install requirements.txt
 ```
 
-# 🔆 Data
+# 🔆 Data Preparation
+**Prepare the API data**
+```
+python extract_api_details.py
+python extract_category_tool_details.py
+python extract_tool_database.py
+```
 **ToolBench**
 
 Refer to [ToolBench](https://github.com/OpenBMB/ToolBench).
