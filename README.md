@@ -40,7 +40,7 @@ We provide sample data in anytoolbench.json file.
 
 
 # 🚗 Run AnyTool
-Fill your OpenAI config and toolbench key into the config.py.
+Fill your OpenAI config and toolbench key into the config.py (see config_example.py). 
 
 Run ToolBench
 ```

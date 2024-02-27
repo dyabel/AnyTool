@@ -10,7 +10,7 @@ def extract_tool_data():
                 if root.split('/')[-1] not in tool_data:
                     tool_data[root.split('/')[-1]] = {}
                 with open(os.path.join(root, file), "r") as f:
-                    # print(root, file)
+                    print(root, file)
                     data = json.load(f)
                     try:
                         tool_name = data["tool_name"] if "tool_name" in data else data["name"]
