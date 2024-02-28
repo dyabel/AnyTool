@@ -1,8 +1,5 @@
-import openai
-from openai_function_calling import FunctionInferer
 import json
 from anytool.prompt_template import *
-from tenacity import retry, wait_random_exponential, stop_after_attempt
 from concurrent.futures import ThreadPoolExecutor,as_completed
 from openai_utils import call_gpt
 import time
@@ -12,12 +9,8 @@ from anytool.check_solved import compute_pass_rate, process_invalid_data, proces
 import os
 from tqdm import tqdm
 import random
-import importlib
 args = parse_args()
 output_dir = args.output_dir
-
-
-
 
 def Finish(answer:str, reason:str=None):
     """Finish the conversation"""

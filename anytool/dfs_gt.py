@@ -4,14 +4,12 @@ from typing import List, Dict, Any
 import re
 from tqdm import tqdm
 import time
-import requests
 from termcolor import colored
 from copy import deepcopy
 from anytool.api_database_function import *
 from anytool.verifier import check_solved_toolbench
 import os
 from anytool.rapidapi import pipeline_runner
-import openai
 import json
 
 class dotdict(dict):

@@ -10,7 +10,7 @@ import requests
 from termcolor import colored
 import random
 from anytool.api_database_function import *
-from server import get_rapidapi_response
+from toolbench.inference.server import get_rapidapi_response
 import tiktoken
 from copy import deepcopy
 from anytool.verifier import check_task_complete, check_task_solved
@@ -712,7 +712,9 @@ if __name__ == '__main__':
                     query = result['query']
                     answer = result['answer']
                     plan = result['plan']
-                solved, reason = check_task_solved(data['query'], data['final_answer'])
+                else:
+                    continue
+                solved, reason = check_task_solved(query, answer)
                 if solved != 'Solved':
                     continue
                 break

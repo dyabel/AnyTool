@@ -1,4 +1,3 @@
-import openai
 from anytool.api_database_function import *
 import json
 import os
@@ -9,7 +8,6 @@ from openai_utils import call_gpt
 import threading
 from threading import Thread, Semaphore
 import time
-import collections
 import numpy as np
 from arguments import parse_args
 args = parse_args()

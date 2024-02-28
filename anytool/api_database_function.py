@@ -2,10 +2,8 @@ import json
 from copy import deepcopy
 from autogen.retrieve_utils import TEXT_FORMATS
 # from openai_function_calling import FunctionInferer
-import autogen
+# import autogen
 from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
-import chromadb
-import openai
 import random
 import re
 import os

@@ -32,3 +32,4 @@ sentence_transformers
 pypdf
 chromadb
 IPython
+pyautogen

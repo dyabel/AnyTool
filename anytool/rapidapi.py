@@ -5,7 +5,6 @@ import time
 import requests
 from tqdm import tqdm
 from termcolor import colored
-import random
 from copy import deepcopy
 from toolbench.inference.LLM.chatgpt_function_model import ChatGPTFunction, GPT4Function
 from toolbench.inference.LLM.davinci_model import Davinci
