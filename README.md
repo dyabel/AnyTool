@@ -67,7 +67,7 @@ python scripts/anytoolbench_generation.py --output_path atb_data/anytoolbench_ne
 
 We provide sample data in [anytoolbench.json](./atb_data/anytoolbench.json) file.
 
-The data looks like
+The data look like
 ```json
 "query": "Can you provide detailed information about \"The Incredible Hulk\" movie that was released in 2008, including its plot, genres, and how it's evaluated by audiences, and also tell me the current timezone for Los Angeles, USA?",
 "final_answer": "The Incredible Hulk (2008) is about scientist Bruce Banner who searches for an antidote to his unbridled rage, the Hulk, but faces new foes when forced back to civilization. GENRES: Sci-Fi, Action, Adventure. AUDIENCE SCORE: 6.2/10. The current timezone for Los Angeles, USA, is America/Los_Angeles.",
