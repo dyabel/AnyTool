@@ -15,13 +15,16 @@ args = parse_args()
 output_dir = args.output_dir
 if api_type == "azure":
     from openai import AzureOpenAI as Client
+    client = Client(
+    api_key=api_key,
+    api_version=api_version,
+    azure_endpoint = api_base
+    )
 else:
     from openai import OpenAI as Client
-client = Client(
-api_key=api_key,
-api_version=api_version,
-azure_endpoint = api_base
-)
+    client = Client(
+    api_key=api_key,
+    )
 # turbo_client = Client(
 # api_key=api_key,
 # api_version=api_version,

@@ -454,7 +454,6 @@ You have access of the following tools:\n'''
                     # 11 message contains "error" field
                     # 12 error sending request
                     cnt = 0
-                    print(111, response['error'], file=open('error.txt','a'))
                     while any([word in response["error"] for word in error_list]):
                         if cnt < len(self.rapidapi_key_list):
                             # if self.use_rapidapi_key or self.api_customization:

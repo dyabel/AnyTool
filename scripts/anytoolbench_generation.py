@@ -25,50 +25,6 @@ assert enc.decode(enc.encode("hello world")) == "hello world"
 token_cnt = 0
 error_list = ['Too many requests error...', 'Rate limit...', 'Unsubscribed', 'Unauthorized', 'not working error...', 'Quota','quota', 'Blocked', 'Rate limit', 'Unauthorized error']
 
-FORMAT_INSTRUCTIONS_CONTINUAL_DATA_GENERATION = """
-You have access to a database of tools and functions (apis). Function is same to api in our context. 
-You need to help me extend a user query which can be answered by the apis in the database.
-The database has the categorites of {categories},
-You can use the meta functions to retrieve the relevant functions. For example, you can use the meta
-function query_tools_in_category to retrieve the available tools of a specific category. Then, you can use the meta
-function query_apis_in_tool to retrieve the api list of a specific tool. 
-If you are unsure about the functioinality of some tools, you can use the meta api query_tool_details to retrieve the details of a specific tool. 
-If you are unsure about the functioinality of some apis, you can use the meta api get_api_details to retrieve the details of a specific api.
-After you get some functions, use the add_apis function to add the functions you find to the available function list which you can call them later.
-Please note that the original function names will be transformed to a standard form, 
-so you should not use the original function names when calling.
-You must synthsize some parameters to test each of these functions!
-You can try multiple times with different parameters.
-Then, you should use the function responses for formulating the query.
-If you find that some functions are not valid now or cannot be used to form a query, use remove_apis to remove the apis from the available api list.
-Please make sure that the extended query contains all the information or parameters needed to call the apis. 
-Do not use ambiguous words like 'a specific', 'my friend'. 
-You should mention the detailed information. The query should be related to the test results of the functions 
-but it should not  mention the tool names or api names. Make sure that extended part can be answered by the current functions.
-If you finished extending the query, 
-call the Finish function with the final extened query and the corresponding extended answer. 
-You must include the original query in the extended query.
-The answer should directly answer the query instead of giving a plan.
-You should call the initial meta functions no more than 20 times.
-The extended part should consist of a minimum of thirty words.
-"""
-
-FORMAT_INSTRUCTIONS_DATA_GENERATION_OPTIMIZED="""
-You are an advanced AutoGPT interface designed for dynamic interaction with a comprehensive database of tools and APIs. Your primary function is to assist in generating user queries that can be resolved using the appropriate APIs within the database. To navigate this task efficiently, you have access to five initial meta APIs: query_all_categories, query_tools_in_category, query_apis_in_tool, query_tool_details, and get_api_details. Additionally, you have the capability to test APIs with the add_apis function and can finalize a process with the Finish function.
-
-You must articulate your analytical process at each step, providing a rationale for your choices and outlining the next action, all in a succinct manner not exceeding five sentences. Use the initial meta APIs to identify relevant functions, remembering that your total calls to these APIs should not exceed 10. Ensure that each formulated query is comprehensive, containing all necessary information to be addressed by the selected APIs.
-
-Here is your task:
-
-Call query_all_categories to start identifying potential API categories relevant to common user queries.
-Select a category and use query_tools_in_category to find available tools within that category.
-Choose a tool and employ query_apis_in_tool to obtain a list of APIs associated with it.
-If clarification on tool functionality is needed, use query_tool_details; similarly, use get_api_details for specifics on an API.
-Test potential APIs with add_apis if you deem it necessary.
-Once the suitable APIs are determined, compose a user query that these API can answer and execute the Finish function with this query.
-Begin your task with an initial analysis based on common user query needs and proceed strategically, justifying your decisions at each step and ensuring efficient use of your limited meta API calls."""
-
-
 import os
 import json
 from flask import Flask, jsonify, request
@@ -280,6 +236,7 @@ def add_apis(api_list):
 
         api_name_reflect[openai_function_json["name"]] = pure_api_name
         api2origin[openai_function_json["name"]] = {'category_name': origin_api_list[k]['category_name'], 'tool_name': origin_api_list[k]['tool_name'], 'api_name': origin_api_list[k]['api_name']} 
+        print(openai_function_json["name"])
 
         tool_names.append(standard_tool_name)
         cate_names.append(cate_name)
@@ -426,9 +383,8 @@ class CoT_Runner(object):
             # if True:
                 result = api_mapping[action_name](**json.loads(action_input))
             except Exception as e:
-                print(e, file=open('output/generation_error.txt','a'))
+                # raise e
                 result = 'input format error'
-                # result = 'function args should be dict'
             return result, 2
         if action_name == "Finish":
             if len(call_cnt) > 0 and min(call_cnt.values()) == 0:
@@ -439,7 +395,7 @@ class CoT_Runner(object):
                 return json.dumps({"error": f"{function_never_called} have not been called. You should call them at least once before formulating the final query", "response": ""}), 15
                 # return json.dumps({"error": "You should call the each new added function at least once before formulating the final query", "response": ""}), 15
             if len(functions) == 7:
-                return json.dumps({"error": "There must be apis successfully added using the add_apis function, and you should formulate your query based on the found apis", "response": ""}), 15
+                return json.dumps({"error": "There must be apis successfully added using the add_apis_into_api_pool function, and you should formulate your query based on the found apis", "response": ""}), 15
                 
             try:
                 json_data = json.loads(action_input,strict=False)
@@ -484,7 +440,6 @@ class CoT_Runner(object):
                         except:
                             # return json.dumps({"error": action_name, "response": ""}), 13
                             os.makedirs('output', exist_ok=True)
-                            print(payload, file=open('output/timeout.txt','a'))
                             return json.dumps({"error": "connection timeout", "response": ""}), 13
                         if response.status_code != 200:
                             return json.dumps({"error": f"request invalid, data error. status_code={response.status_code}", "response": ""}), 12
@@ -505,16 +460,6 @@ class CoT_Runner(object):
                             cnt += 1    
                         else:
                             break
-                   
-                   
-
-
-
-
-
-
-
-
 
 # 12 error sending request
                     if response["error"] == "API not working error...":
@@ -538,25 +483,20 @@ class CoT_Runner(object):
                     #     return json.dumps({"error": f"Timeout error...{e}", "response": ""}), 5
             return json.dumps({"error": f"No such function name: {action_name}", "response": ""}), 1
 
-    def run(self, query, answer):
+    def run(self):
         messages = [
                     {'role':'system',
                      'content': 'You are QueryGPT, a helpful assistant who can strictly follow my instructions to generate diverse real queries'},
                     #  'The query should be related to the category {random.sample(query_all_categories(), random.randint(2, 3))}
                     ]
-        if len(query) > 0:
-            messages.append(
-                {'role':'user',
-                'content': FORMAT_INSTRUCTIONS_CONTINUAL_DATA_GENERATION.replace('{categories}', str(random.sample(query_all_categories(),5))) + 'Here is the query generated at the previous step: ' + query + ' And the answer is: ' + answer + 'You should extend this query to involve more api calls and also extend the answer. The extended part should be related to the current query.'})
-        else:            
-            messages.append({'role':'user', 
+         
+        messages.append({'role':'user', 
                      'content': FORMAT_INSTRUCTIONS_DATA_GENERATION.replace('{generated_queries}', str(generated_query_list[-5:])).replace('{categories}', str(random.sample(query_all_categories(), 49)))})
         i = 0
-        while i < 20:
+        while i < 30:
             print('#'*100)
             print(len(functions), len(raw_api_list))
             # assert len(functions) == len(raw_api_list) + 7, (len(functions), len(raw_api_list))
-            print(len(enc.encode(str(messages))), file=open('token_count_in.txt','a'))
             response = call_gpt(
                 messages,
                 functions
@@ -566,12 +506,10 @@ class CoT_Runner(object):
                 # messages = messages_old
             elif isinstance(response, str):
                 continue
-            print(messages)
             # messages_old = deepcopy(messages)
             i = i + 1
             tool_calls = response.choices[0].message.tool_calls
             print('Thought:', response.choices[0].message.content)
-            print(len(enc.encode(str(response.choices[0].message.content))), file=open('token_count_out.txt','a'))
             print(response.choices[0].finish_reason)
             if tool_calls:
                 messages.append(
@@ -607,30 +545,33 @@ class CoT_Runner(object):
         return 'Exceed_max_iterations', messages    
             
 generated_query_list = ['What is the current weather in Seattle, and what is the weather forecast for the next five days?']       
-
-def generate_main():
+    
+def generate_return_api_main():
     data = {}
-    global functions, tool_names, cate_names, generated_query_list
+    global functions, tool_names, cate_names, generated_query_list, raw_api_list, call_cnt
     while True:
+        raw_api_list = []
+        call_cnt = {}
         functions = [
-            # {'name': 'query_all_categories', 'description': 'query all categories in the database', 'parameters': {'type': 'object', 'properties': {}}}, {'name': 'query_tools_in_category', 'description': 'query all tools in a specific category', 'parameters': {'type': 'object', 'properties': {'category': {'type': 'string'}}}}, 
-                    get_tools_in_category_function.to_json_schema(),
-
-                     {'name': 'query_apis_in_tool', 'description': 'query all apis in a specific tool', 'parameters': {'type': 'object', 'properties': {'category': {'type': 'string'}, 'tool_name': {'type': 'string'}},'required': ['category','tool_name']}}, 
-                     {'name': 'query_tool_details', 'description': 'query the details of a specific tool', 'parameters': {'type': 'object', 'properties': {'tool_name': {'type': 'string'}},'required': ['tool_name']}},
-                     {'name': 'add_apis', 'description': 'add apis to the current available api list. required input to be list of dictionaries describing with the keys category_name, tool_name, api_name', 'parameters': {'type': 'object', 'properties': {'api_list': {'type': 'null'}},'required': ['api_list']}},
-                    #  retrieve_context_function.to_json_schema()
+                    get_tools_in_category_function,
+                    get_apis_in_tool_function,
+                    get_api_details_function,
+                    get_tools_descriptions_function,
+                    add_apis_into_api_pool_function,
+                     remove_apis_function,
                      ]
 
         finish_func = {
             "name": "Finish",
-            "description": "If you believe that you have obtained a query that can answered by the api database, please call this function to provide the final answer.",
+            "description": "If you believe that you have obtained a query that can answered by the api database, please call this function to provide the query, the corresponding answer and the plan of using the functions to answer the query.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "answer":{"type":"string"}
+                    "query":{"type":"string"},
+                    "answer":{"type":"string"},
+                    "plan":{"type":"string"},
                 },
-                "required": ["answer"]
+                "required": ["query", "answer", 'plan']
             }
             }
     
@@ -640,63 +581,22 @@ def generate_main():
 
         runner = CoT_Runner()
         result, messages = runner.run()
+        if isinstance(result, str):
+            continue
         data['result'] = result
-        generated_query_list.append(result['answer'])
-        return result['answer'], messages
-    
-exclusion_words = ["sorry", "apologize", "apology", "unfortunately", "couldn't"]
-def generate_return_api_main():
-    data = {}
-    global functions, tool_names, cate_names, generated_query_list, raw_api_list, call_cnt
-    while True:
-        # try:
-        if True:
-            raw_api_list = []
-            call_cnt = {}
-            functions = [
-                        get_tools_in_category_function,
-                        get_apis_in_tool_function,
-                        get_api_details_function,
-                        get_tools_descriptions_function,
-                        add_apis_into_api_pool_function,
-                         remove_apis_function,
-                         ]
-
-            finish_func = {
-                "name": "Finish",
-                "description": "If you believe that you have obtained a query that can answered by the api database, please call this function to provide the query, the corresponding answer and the plan of using the functions to answer the query.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query":{"type":"string"},
-                        "answer":{"type":"string"},
-                        "plan":{"type":"string"},
-                    },
-                    "required": ["query", "answer", 'plan']
-                }
-                }
-    
-            functions.append(finish_func)
-            cate_names = ['' for func in functions]
-            tool_names = ['' for func in functions]
-
-            runner = CoT_Runner()
-            result, messages = runner.run('', '')
-            if isinstance(result, str):
-                continue
-            data['result'] = result
-            if 'openai' in result: 
-                return result, messages, raw_api_list
-            generated_query_list.append(result['query'])
-            if not any([word in result['answer'].lower() for word in exclusion_words]):
-                return result, messages, raw_api_list
+        if 'openai' in result: 
+            return result, messages, raw_api_list
+        if not any([word in result['answer'].lower() for word in exclusion_words]):
+            return result, messages, raw_api_list
 
 import time
 if __name__ == '__main__':
     exclusion_words = ["sorry", "apologize", "apology", "unfortunately", "couldn't"]
     output_path = args.output_path
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    os.makedirs('output', exist_ok=True)
     generated_query_list = []
+    query_data = []
     query = ''
     answer = ''
     for i in range(1000):
@@ -712,10 +612,8 @@ if __name__ == '__main__':
                     query = result['query']
                     answer = result['answer']
                     plan = result['plan']
+                    print(query)
                 else:
-                    continue
-                solved, reason = check_task_solved(query, answer)
-                if solved != 'Solved':
                     continue
                 break
         except Exception as e:
@@ -728,11 +626,12 @@ if __name__ == '__main__':
         #         if 'tool_calls' in message:
         #             message['tool_calls'] = [tool_call.json() for tool_call in message['tool_calls']]
         data['generate_messages'] = generate_messages
+        generated_query_list.append(query)
 
-        generated_query_list.append({
+        query_data.append({
             'query': query,
             'final_answer': answer,
             'gt_api_list': api_list,
             'query_id': str(2000000+i)
         })
-        json.dump(generated_query_list, open(output_path, 'w'), indent=4)
+        json.dump(query_data, open(output_path, 'w'), indent=4)

@@ -122,7 +122,7 @@ def get_api_details(category_name: str=None, tool_name: str=None, api_name: str=
             for api in tool_data["api_list"]:
                 if api["name"] == api_name:
                     return api
-    return {}
+    return 'api not found'
 
 def locate_api(api_name: str=None) -> dict:
     """query the details of a specific api"""
@@ -161,6 +161,7 @@ def sample_apis(gt_apis, num=200):
             apis.extend(sampled_apis)
     
     return categories, tools, apis
+    
 get_api_details_function = {
     'name': 'get_api_details',
     'description': 'get the details of a specific api',
@@ -305,11 +306,11 @@ def get_tools_descriptions(category_name: str, tool_list: str) -> dict:
             return f'tool name {tool_name} not found'
     return {tool_name: category_tool_details_dict[category_name][tool_name]['tool_description'] for tool_name in tool_list}
 
-def get_response_example(api_name: str) -> str:
-    """get the response example of a specific api"""
-    api_details = get_api_details(api_name)
-    if api_details is None:
-        return 'api name not found'
+# def get_response_example(api_name: str) -> str:
+#     """get the response example of a specific api"""
+#     api_details = get_api_details(api_name)
+#     if api_details is None:
+#         return 'api name not found'
     # return api_details['response_example']
 split_function = lambda x: x.split("}")
 # # 1. create an RetrieveAssistantAgent instance named "assistant"

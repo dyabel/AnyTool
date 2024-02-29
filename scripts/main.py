@@ -14,7 +14,7 @@ args = parse_args()
 output_dir = args.output_dir
 raise_error = False
 max_api_number = args.max_api_number
-sem = Semaphore(16)  # 允许同时运行的最大线程数为3
+sem = Semaphore(16)  # 允许同时运行的最大线程数为16
 class DoNothingContextManager:
     def __enter__(self):
         pass
@@ -897,6 +897,7 @@ output_dir = args.output_dir
 query_path = args.query_path
 if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
+    os.makedirs('output', exist_ok=True)
     success_cnt = 0
     pass_cnt = 0
     unsolvable_task_cnt = 0

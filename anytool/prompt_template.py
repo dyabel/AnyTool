@@ -110,7 +110,7 @@ selected tool.
 3. If you need detailed information about some tools, gets_tools_descriptions will
 provide it.
 4. For in-depth understanding of an API's functionality, turn to
-get api details.
+get_api_details. Remember, do not make up the API names, use get_apis_in_tool to get the API list.
 Selection and Testing Functions:
 1. As you identify relevant functions, add them to your working list using
 add_apis_into_pool into api pool.
@@ -145,6 +145,7 @@ different skill levels and cultural backgrounds. Ensure that the query is
 globally relevant and straightforward, serving a singular purpose without
 diverging into unrelated areas. The complexity of your query should stem from
 the synthesis of information from multiple APIs.
+4.You should finish in 20 steps.
 """.replace('{email}', "devon58425@trackden.com").replace('{phone number}', "+6285360071764").replace('{url}', "https://deepmind.google/")
 
 
