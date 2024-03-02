@@ -60,15 +60,6 @@ def call_gpt(messages, functions=None, **kwargs):
                         **kwargs
                     )
         except openai.BadRequestError as e:
-            # try:
-            #     response = turbo_client.chat.completions.create(
-            #             seed=123,
-            #             model='gpt-4-turbo',
-            #             messages=messages,
-            #             functions=functions
-            #         )
-            # except Exception as e:
-            #     raise e
             raise e
            
         except openai.RateLimitError as e:
@@ -85,8 +76,6 @@ def call_gpt(messages, functions=None, **kwargs):
     try:
         response, t_real = call_gpt_retry(messages_converted, functions)
         # json_content = response.choices[0].message.content
-        t = time.time() - t_s
-        print('minus:', t-t_real, file=open(os.path.join(output_dir, "time.txt"), "a"))
         # print(response.choices[0].message.function_call)
         if response.choices[0].finish_reason == 'function_call':
             response_json = json.loads(response.json())

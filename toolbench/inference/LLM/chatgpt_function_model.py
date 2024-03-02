@@ -10,25 +10,6 @@ from arguments import parse_args
 from config import *
 from openai_utils import call_gpt
 args = parse_args()
-output_dir = args.output_dir
-# import importlib
-# module = importlib.import_module(args.openai_config_path.replace('.py',''))
-# for name in dir(module):
-#     if not name.startswith('_'):
-#         globals()[name] = getattr(module, name)
-# api_key = globals()['api_key']
-# api_version = globals()['api_version']
-# model_name = globals()['model_name']
-# api_base = globals()['api_base']
-if api_type == "azure":
-    from openai import AzureOpenAI as Client
-else:
-    from openai import OpenAI as Client
-client = Client(
-    api_key=api_key,
-    api_version=api_version,
-    azure_endpoint = api_base
-    )
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
 def chat_completion_request(key, messages, functions=None,function_call=None,key_pos=None, model="gpt-4-32k",stop=None,process_id=0, **args):
     use_messages = []
@@ -52,30 +33,14 @@ def chat_completion_request(key, messages, functions=None,function_call=None,key
         json_data.update({"function_call": function_call})
     
     try:
-        # if model in ["gpt-3.5-turbo-16k-0613","gpt-4-0613", "gpt-4-deployment","gpt-4-32k", 'gpt-4-turbo']:
-        #     openai.api_key = key
-        # else:
-        #     raise NotImplementedError
-        # ts = time.time()
-        # print(json_data, file=open('output/gpt_io.txt','a'))
-        # print(time.time()-ts)
-        ts = time.time()
-        # json.dump(json_data['messages'], open(os.path.join(output_dir,'messages.json'),'w'), indent=4)
         openai_response = call_gpt(
             **json_data,
         )
-        # openai_response = client.chat.completions.create(
-        #     **json_data,
-        # )
-        # print('solve', time.time()-ts, file=open(os.path.join(output_dir,'time.txt'),'a'))
-        # json_data = json.loads(str(openai_response))
         json_data = json.loads(openai_response.json())
         json_data["choices"][0]['message'].pop('tool_calls')
         return json_data 
 
     except Exception as e:
-        # print('solve', time.time()-ts, file=open(os.path.join(output_dir,'time.txt'),'a'))
-        # # json_data = json.loads(str(openai_response))
         # json_data = json.loads(openai_response.json())
         # json_data["choices"][0]['message'].pop('tool_calls')
         print("Unable to generate ChatCompletion response")

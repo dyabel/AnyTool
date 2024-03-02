@@ -125,7 +125,6 @@ def solve_given_api_main(query, api_list, i, messages=None):
                 result_data['result']['reason'] = reason
             result['answer_generation']['final_answer'] = json.dumps(result_data['result'])
         if result['answer_generation']['finish_type'] == 'give_answer' and 'final_answer' in result_data['result'] and  result_data['result']['final_answer'] != '':
-            # and not any(word in str(result['answer_generation']['final_answer']).lower() for word in exclusion_words)
             solved = True
         else:
             solved = False
@@ -137,7 +136,6 @@ from arguments import parse_args
 args = parse_args()
 output_path = args.output_dir
 
-# output_path = f'{query_dir}/reassign_toolllama_dfs_r1'
 os.makedirs(output_path, exist_ok=True)
 dfs_args = dotdict(dict(backbone_model='chatgpt_function', openai_key='', model_path='your_model_path/', tool_root_dir='data/toolenv/tools/', lora=False, lora_path='your_lora_path if lora', max_observation_length=1024, max_source_sequence_length=4096, max_sequence_length=8192, observ_compress_method='truncate', method='DFS_woFilter_w2', input_query_file='data/test_instruction/G1_tool.json', output_answer_file=output_path, toolbench_key=toolbench_key, rapidapi_key='', use_rapidapi_key=False, api_customization=False))
 dfs_runner = pipeline_runner(dfs_args)
@@ -156,9 +154,6 @@ if __name__ == '__main__':
     for i in range(262):
         t_s = time.time()
         comparison_data = {}
-        # for file in files:
-        #     if file.endswith('.json'):
-        #         print(file)
         data_load = json.load(open(f'{args.query_dir}/{i}.json', 'r', encoding='utf-8'))
         if str(data_load['query_id']) in solved_dict and solved_dict[str(data_load['query_id'])]['solved'] != 'Solved':
             continue
@@ -166,8 +161,6 @@ if __name__ == '__main__':
         query = data_load['query']
         # continue
         cnt += 1
-        # if cnt > 50:
-        #     break
         if os.path.exists(os.path.join(output_path, f'{i}_DFS_woFilter_w2.json')):
             data = json.load(open(os.path.join(output_path, f'{i}_DFS_woFilter_w2.json'), 'r', encoding='utf-8'))
             final_data = json.load(open(os.path.join(output_path, f'{i}.json'), 'r', encoding='utf-8'))

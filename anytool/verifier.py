@@ -25,49 +25,41 @@ def check_task_solvable(query):
         "content": f"Please check whether the following query is solvable: {query}. Begin!"}
         ]
     for i in range(5):
-        # try:
-        if True:
-            t_s = time.time()
-            response = call_gpt(
-                            messages=messages,
-                            functions=[solvable_finish_function]
-                        )
-            print(time.time() - t_s)
-            tool_calls = response.choices[0].message.tool_calls
-            print('Thought:', response.choices[0].message.content)
-            if tool_calls:
-                for tool_call in tool_calls:
-                    function_name = tool_call.function.name
-                    function_args = tool_call.function.arguments
-                    if function_name == 'Finish':
-                        try:
-                            solvable, reason = Finish(**json.loads(function_args))
-                        except:
-                            continue
-                            # solvable, reason = Finish(json.loads(function_args))
-                            
-                    else:
+        response = call_gpt(
+                        messages=messages,
+                        functions=[solvable_finish_function]
+                    )
+        tool_calls = response.choices[0].message.tool_calls
+        print('Thought:', response.choices[0].message.content)
+        if tool_calls:
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_args = tool_call.function.arguments
+                if function_name == 'Finish':
+                    try:
+                        solvable, reason = Finish(**json.loads(function_args))
+                    except:
                         continue
-                    print(solvable, query, file=open('result/solvable.txt', 'a', encoding='utf-6'))
-                    if solvable == 'Unsolvable' and reason is None:
-                        messages.append({"role": "user", "content": 'You must give reason if the answer is Unsolvable'})
-                    if reason is not None:
-                        print(reason, file=open('result/solvable.txt', 'a', encoding='utf-8'))
-                    else:
-                        reason = ''
-                    return solvable, reason
-            else:
-                print('Thought:', response.choices[0].message.content)
-                continue
+                        # solvable, reason = Finish(json.loads(function_args))
+                        
+                else:
+                    continue
+                print(solvable, query, file=open('result/solvable.txt', 'a', encoding='utf-6'))
+                if solvable == 'Unsolvable' and reason is None:
+                    messages.append({"role": "user", "content": 'You must give reason if the answer is Unsolvable'})
+                if reason is not None:
+                    print(reason, file=open('result/solvable.txt', 'a', encoding='utf-8'))
+                else:
+                    reason = ''
+                return solvable, reason
+        else:
+            print('Thought:', response.choices[0].message.content)
+            continue
                 # messages.append({"role": "assistant", "content": response.choices[0].message.get('content', '')})
-        # except:
-        #     pass
     print('No response from the model', file=open('result/solvable.txt', 'a', encoding='utf-8'))
     return 'No response', 'No response from the model'
 
 def check_task_solvable_by_function(query, functions):
-    # return 'Solvable', ''
-    # print(functions)
     messages = [{
         "role": "system",
         "content": CHECK_SOLVABLE_BY_FUNCTION_PROMPT 
@@ -76,40 +68,33 @@ def check_task_solvable_by_function(query, functions):
         "content": f"Query: {query}.  Available_tools: {functions}. Begin!"}
         ]
     for i in range(5):
-        # try:
-        if True:
-            t_s = time.time()
-            response = call_gpt(
-                            messages=messages,
-                            functions=[solvable_finish_function]
-                        )
-            print(time.time() - t_s)
-            tool_calls = response.choices[0].message.tool_calls
-            print('Thought:', response.choices[0].message.content)
-            if tool_calls:
-                for tool_call in tool_calls:
-                    function_name = tool_call.function.name
-                    function_args = tool_call.function.arguments
-                    if function_name.lower() == 'finish':
-                        try:
-                            solvable, reason = Finish(**json.loads(function_args))
-                        except:
-                            continue
-                            # solvable, reason = Finish(json.loads(function_args))
-                            
-                    else:
+        response = call_gpt(
+                        messages=messages,
+                        functions=[solvable_finish_function]
+                    )
+        tool_calls = response.choices[0].message.tool_calls
+        print('Thought:', response.choices[0].message.content)
+        if tool_calls:
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_args = tool_call.function.arguments
+                if function_name.lower() == 'finish':
+                    try:
+                        solvable, reason = Finish(**json.loads(function_args))
+                    except:
                         continue
-                    print(solvable, query, file=open('result/solvable.txt', 'a', encoding='utf-8'))
-                    if solvable == 'Unsolvable' and reason is None:
-                        messages.append({"role": "user", "content": 'You must give reason if the answer is Unsolvable'})
-                    if reason is not None:
-                        print(reason, file=open('result/solvable.txt', 'a', encoding='utf-8'))
-                    else:
-                        reason = ''
-                    return solvable, reason, response.usage.total_tokens
-            else:
-                print('Thought:', response.choices[0].message.content)
-                continue
+                        # solvable, reason = Finish(json.loads(function_args))
+                        
+                else:
+                    continue
+                if solvable == 'Unsolvable' and reason is None:
+                    messages.append({"role": "user", "content": 'You must give reason if the answer is Unsolvable'})
+                if reason is None:
+                    reason = ''
+                return solvable, reason, response.usage.total_tokens
+        else:
+            print('Thought:', response.choices[0].message.content)
+            continue
                 # messages.append({"role": "assistant", "content": response.choices[0].message.get('content', '')})
         # except:
         #     pass
@@ -141,13 +126,10 @@ def check_task_solved(query, answer):
                 print(function_name, function_args)
                 if function_name.lower() == 'finish':
                     solvable, reason = Finish(**json.loads(function_args))
-                    print(solvable, query, file=open('result/solved.txt', 'a', encoding='utf-8'))
                     if solvable == 'Unsolved' and reason is None:
                         messages.append({"role": "user", "content": 'You must give reason if the answer is Unsolvable'})
                         continue
-                    if reason is not None:
-                        print(reason, file=open('result/solved.txt', 'a', encoding='utf-8'))
-                    else:
+                    if reason is None:
                         reason = ''
                     return solvable, reason
                     
@@ -167,11 +149,9 @@ def check_solved_toolbench(output_path, query_id, task_solvable=None, solvable_t
         example = process_invalid_data(method,data_dict)
     else:
         example = process_valid_data(method,data_dict['answer_generation'])
-    # example['available_tools'] = query_data[str(ori_query_id)]['available_tools']
     future = []
     answer_dict = {'passed':0, 'failed':0}
     with ThreadPoolExecutor(32) as pool:
-        print(task_solvable, solvable_task_reason, file=open(os.path.join(output_dir, 'solvable.txt'), 'a', encoding='utf-8'))
         for _ in range(3):
             future.append(pool.submit(
                 compute_pass_rate,

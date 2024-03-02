@@ -963,135 +963,132 @@ if __name__ == "__main__":
                 # continue
             print(f'query: {query}')
             flag = False
-            try:
-                runner = Main_Search_Agent(query)
-                agents.append(runner)
-                if multi_thread:
-                    thread = threading.Thread(target=runner.assign_main, args=(query,))
-                    sem.acquire()
-                    thread.start()
-                    threads.append(thread)
+            runner = Main_Search_Agent(query)
+            agents.append(runner)
+            if multi_thread:
+                thread = threading.Thread(target=runner.assign_main, args=(query,))
+                sem.acquire()
+                thread.start()
+                threads.append(thread)
+            else:
+                iter_func = runner.assign_main(query)
+            messages = None
+            cnt = 0
+            solve_data = {}
+            if multi_thread:
+                while True:
+                    thread_num = len(threads)
+                    has_thread_alive = False
+                    for thread in threads:
+                        if thread.is_alive():
+                            has_thread_alive = True
+                            thread.join()
+                    if not has_thread_alive:
+                        break
+                    if error_flag: raise Exception('GPT Call Error')
+                threads = []
+            # refind
+            check_solved = ''
+            max_depth = max([agent.depth for agent in agents])  
+            while not all([agent.finish_search for agent in agents]) or not flag:
+                if check_solved == 'Solved':
+                    break
+                max_depth = max([agent.depth for agent in agents])  
+                depth = max_depth
+                while all([agent.finish_search for agent in agents if agent.depth == depth]) and depth >= 0:
+                    depth -= 1
+                if depth < 0 and flag:
+                    break
+                agents_to_resume = [agent for agent in agents if not agent.finish_search and agent.depth == depth]
+                if total_tokens > 200000 and flag:
+                    solved = False
+                    check_solved = 'Timeout'
+                    solve_data = {'result': 'Timeout'}
+                    break
+                cnt += 1
+                failed_reason = None
+                print(len(global_api_list), file=open(f'{output_dir}/api_list_len.txt', 'a', encoding='utf-8'))
+                print(global_api_list, file=open(f'{output_dir}/api_list.txt', 'a', encoding='utf-8'))
+                print('#'*100)
+                assign_results['api_list'].append(deepcopy(global_api_list))
+                if stop or not flag or all([agent.finish_search for agent in agents]) and len(global_api_list) > 0:
+                    flag = True
+                    last_solve_time = cnt
+                    t_s = time.time()
+                    selected_api_list = deepcopy(global_api_list)
+
+                    solved, solve_data = solve_given_api_main(query, selected_api_list, f'{query_id}_{cnt}', messages)
+
+                    print('solve time:', time.time() - t_s, 'api number:', len(global_api_list),file=open(f'{output_dir}/time.txt', 'a', encoding='utf-8'))
+                    result_list.append(deepcopy(solve_data['result']))
+                    print(solve_data['result'], solved)
+                    if not solved or any([word in solve_data['result']['final_answer'] for word in exclusion_words]):
+                        check_solved = 'Unsolved'
+                        reason = solve_data['result']
+                    else:
+                        check_solved, reason, tokens = check_solved_toolbench(f'{output_dir}/{query_id}_{last_solve_time}_DFS_woFilter_w2.json', query_id, task_solvable, solvable_reason)
+                        total_tokens += tokens
+                    print(colored((check_solved, reason), 'red'))
+                    failed_reason = reason
+                    dfs_data = json.load(open(f'{output_dir}/{query_id}_{last_solve_time}_DFS_woFilter_w2.json', 'r', encoding='utf-8'))
+                    total_tokens += dfs_data['answer_generation']['total_tokens']
+                    solve_tokens += dfs_data['answer_generation']['total_tokens']
+                    if check_solved == 'Solved':
+                        break
+                    try:
+                        messages = dfs_data['answer_generation']['train_messages'][-1]
+                    except:
+                        messages = None
+                    api_list_to_prune = []
+                    for standardized_api_name, origin_api in dfs_data['api2origin'].items():
+                        if standardized_api_name in str(failed_reason):
+                            if origin_api in global_api_list:
+                                api_list_to_prune.append(origin_api)
+                    print(colored(api_list_to_prune, 'red'))
+                    print(len(api_list_to_prune))
+                    remove_apis(api_list_to_prune)
+                    if len(global_api_list) >= max_api_number:
+                        break
+                    # print(api_list_to_prune, file=open(f'{output_dir}/prune_api_list.txt', 'a', encoding='utf-8'))
+                    stop = False
                 else:
-                    iter_func = runner.assign_main(query)
-                messages = None
-                cnt = 0
-                solve_data = {}
+                    assert status != 'The current api list can solve the query.'
+                    failed_reason = status
+                reason_list.append(failed_reason)
+                print(colored('Refind Begin', 'red'))
+                print(colored(agents_to_resume, 'red'))
+                print([agent.finish_search for agent in agents_to_resume])
+
+
+                threads = []
+                resume_cnt = 0 
+                resumed_agents.append([(str(a), a.index) for a in agents_to_resume])
+                for agent in reversed(agents_to_resume):
+                    if agent.finish_search: continue
+                    resume_cnt += 1
+                    agent.failed_reason = str(failed_reason)
+                    print(colored(('resuming', agent, agent.depth), 'red'))
+                    print(colored(('resuming', agent, agent.depth), 'red'), file=open(f'{output_dir}/resume.txt', 'a', encoding='utf-8'))
+                    if multi_thread:
+                        thread = threading.Thread(target=agent.resume_search)
+                        sem.acquire()
+                        thread.start()
+                        threads.append(thread)
+                    else:
+                        agent.resume_search()
                 if multi_thread:
                     while True:
                         thread_num = len(threads)
-                        has_thread_alive = False
                         for thread in threads:
                             if thread.is_alive():
-                                has_thread_alive = True
                                 thread.join()
-                        if not has_thread_alive:
+                        if thread_num == len(threads):
                             break
                         if error_flag: raise Exception('GPT Call Error')
-                    threads = []
-                # refind
-                check_solved = ''
-                max_depth = max([agent.depth for agent in agents])  
-                while not all([agent.finish_search for agent in agents]) or not flag:
-                    if check_solved == 'Solved':
-                        break
-                    max_depth = max([agent.depth for agent in agents])  
-                    depth = max_depth
-                    while all([agent.finish_search for agent in agents if agent.depth == depth]) and depth >= 0:
-                        depth -= 1
-                    if depth < 0 and flag:
-                        break
-                    agents_to_resume = [agent for agent in agents if not agent.finish_search and agent.depth == depth]
-                    if total_tokens > 200000 and flag:
-                        solved = False
-                        check_solved = 'Timeout'
-                        solve_data = {'result': 'Timeout'}
-                        break
-                    cnt += 1
-                    failed_reason = None
-                    print(len(global_api_list), file=open(f'{output_dir}/api_list_len.txt', 'a', encoding='utf-8'))
-                    print(global_api_list, file=open(f'{output_dir}/api_list.txt', 'a', encoding='utf-8'))
-                    print('#'*100)
-                    assign_results['api_list'].append(deepcopy(global_api_list))
-                    if stop or not flag or all([agent.finish_search for agent in agents]) and len(global_api_list) > 0:
-                        flag = True
-                        last_solve_time = cnt
-                        t_s = time.time()
-                        selected_api_list = deepcopy(global_api_list)
-
-                        solved, solve_data = solve_given_api_main(query, selected_api_list, f'{query_id}_{cnt}', messages)
-
-                        print('solve time:', time.time() - t_s, 'api number:', len(global_api_list),file=open(f'{output_dir}/time.txt', 'a', encoding='utf-8'))
-                        result_list.append(deepcopy(solve_data['result']))
-                        print(solve_data['result'], solved)
-                        if not solved or any([word in solve_data['result']['final_answer'] for word in exclusion_words]):
-                            check_solved = 'Unsolved'
-                            reason = solve_data['result']
-                        else:
-                            check_solved, reason, tokens = check_solved_toolbench(f'{output_dir}/{query_id}_{last_solve_time}_DFS_woFilter_w2.json', query_id, task_solvable, solvable_reason)
-                            total_tokens += tokens
-                        print(colored((check_solved, reason), 'red'))
-                        failed_reason = reason
-                        dfs_data = json.load(open(f'{output_dir}/{query_id}_{last_solve_time}_DFS_woFilter_w2.json', 'r', encoding='utf-8'))
-                        total_tokens += dfs_data['answer_generation']['total_tokens']
-                        solve_tokens += dfs_data['answer_generation']['total_tokens']
-                        if check_solved == 'Solved':
-                            break
-                        try:
-                            messages = dfs_data['answer_generation']['train_messages'][-1]
-                        except:
-                            messages = None
-                        api_list_to_prune = []
-                        for standardized_api_name, origin_api in dfs_data['api2origin'].items():
-                            if standardized_api_name in str(failed_reason):
-                                if origin_api in global_api_list:
-                                    api_list_to_prune.append(origin_api)
-                        print(colored(api_list_to_prune, 'red'))
-                        print(len(api_list_to_prune))
-                        remove_apis(api_list_to_prune)
-                        if len(global_api_list) >= max_api_number:
-                            break
-                        # print(api_list_to_prune, file=open(f'{output_dir}/prune_api_list.txt', 'a', encoding='utf-8'))
-                        stop = False
-                    else:
-                        assert status != 'The current api list can solve the query.'
-                        failed_reason = status
-                    reason_list.append(failed_reason)
-                    print(colored('Refind Begin', 'red'))
-                    print(colored(agents_to_resume, 'red'))
-                    print([agent.finish_search for agent in agents_to_resume])
-
-
-                    threads = []
-                    resume_cnt = 0 
-                    resumed_agents.append([(str(a), a.index) for a in agents_to_resume])
-                    for agent in reversed(agents_to_resume):
-                        if agent.finish_search: continue
-                        resume_cnt += 1
-                        agent.failed_reason = str(failed_reason)
-                        print(colored(('resuming', agent, agent.depth), 'red'))
-                        print(colored(('resuming', agent, agent.depth), 'red'), file=open(f'{output_dir}/resume.txt', 'a', encoding='utf-8'))
-                        if multi_thread:
-                            thread = threading.Thread(target=agent.resume_search)
-                            sem.acquire()
-                            thread.start()
-                            threads.append(thread)
-                        else:
-                            agent.resume_search()
-                    if multi_thread:
-                        while True:
-                            thread_num = len(threads)
-                            for thread in threads:
-                                if thread.is_alive():
-                                    thread.join()
-                            if thread_num == len(threads):
-                                break
-                            if error_flag: raise Exception('GPT Call Error')
-                    if not stop:
-                        check_if_request_solvable()
-                        print(colored(f'status:{status}', 'red'))
-                    assign_results['stop'].append(stop)
-            except KeyboardInterrupt as e:
-                continue
+                if not stop:
+                    check_if_request_solvable()
+                    print(colored(f'status:{status}', 'red'))
+                assign_results['stop'].append(stop)
 
             assign_results['api_complete'] = flag
 
