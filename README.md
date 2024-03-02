@@ -25,8 +25,7 @@ Fill out the [form](https://docs.google.com/forms/d/e/1FAIpQLSdqHypmYanWU8ZhuUcr
 **ToolBench**
 
 Download the ToolBench data using the following link: [Google Drive](https://drive.google.com/drive/folders/1yBUQ732mPu-KclJnuQELEhtKakdXFc3J) or [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/c9e50625743b40bfbe10/).
-
-The file structure is as follows:
+Decompress the data.zip and the file structure is as follows:
 ```
 ├── /data/
 │  ├── /instruction/

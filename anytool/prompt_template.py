@@ -306,9 +306,8 @@ Please check whether the given task solvable with following rules:
 1. If the `query` provide invalid information (e.g. invalid email address or phone number), return "Unsolvable"
 2. If the `query` needs more information to solve (e.g. the target restaurant name in a navigation task), return "Unsolvable"
 3. If you are unable to draw a conclusion, return "Unsure"
-5. Otherwise, return "Solvable"
+4. Otherwise, return "Solvable"
 Remember, you should assume you have all the tools to solve the query but you do not need to answer the query at this time.
 
 You must call the Finish function at one step.
 """
-# 4. If the query is illegal or unethical or sensitive, return "Unsure"

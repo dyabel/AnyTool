@@ -27,6 +27,4 @@ def extract_tool_data():
                         tool_data[root.split('/')[-1]][tool_name] = {"tool_description": tool_description}
     return tool_data
 tool_data = extract_tool_data()
-print(tool_data.keys())
 json.dump(tool_data, open("category_tool_details.json", "w", encoding='utf-8'), indent=4)
-# json.dump(tool_data, open("category_tool_details_add_nonfree.json", "w", encoding='utf-8'), indent=4)
