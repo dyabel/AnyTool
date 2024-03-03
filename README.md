@@ -51,9 +51,9 @@ For more details, please refer to [ToolBench](https://github.com/OpenBMB/ToolBen
 You should prepare the ToolBench data first. Make sure you have the directory of data/toolenv/tools
 ```
 export PYTHONPATH=./
-python scripts/extract_api_details.py
-python scripts/extract_category_tool_details.py
-python scripts/extract_tool_database.py
+python preprocess/extract_api_details.py
+python preprocess/extract_category_tool_details.py
+python preprocess/extract_tool_database.py
 ```
 
 **AnyToolBench**

@@ -901,7 +901,6 @@ if __name__ == "__main__":
     success_cnt = 0
     unsolvable_task_cnt = 0
     unsolvable_list = json.load(open('misc/unsolvable.json', 'r', encoding='utf-8'))
-    json.dump(sorted(list(set(unsolvable_list))), open('misc/unsolvable.json', 'w', encoding='utf-8'), indent=4)
     total_cnt = 0
     query_data_all = json.load(open(query_path, 'r', encoding='utf-8'))
     for query_data in query_data_all:
