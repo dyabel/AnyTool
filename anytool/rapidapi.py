@@ -624,7 +624,7 @@ class pipeline_runner:
             process_id=process_id,
             single_chain_max_step=12,
             # max_query_count=100,
-            max_query_count=200,
+            max_query_count=10,
             callbacks=callbacks,
             messages=messages,
         )
