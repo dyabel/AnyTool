@@ -213,7 +213,7 @@ class Category_Agent(Agent):
                             print(e, function_name, function_args, file=open(f'{output_dir}/error.txt', 'a', encoding='utf-8'))
                             if raise_error:
                                 raise e
-                            function_call_result = 'input format error'
+                            function_call_result = str(e)
                         self.messages.append(
                             {
                         "tool_call_id": tool_call.id,
@@ -324,7 +324,7 @@ class Category_Agent(Agent):
                             print(e, function_name, function_args, file=open(f'{output_dir}/error.txt', 'a', encoding='utf-8'))
                             if raise_error:
                                 raise e
-                            function_call_result = 'input format error'
+                            function_call_result = str(e)
                     self.messages.append(
                         {
                     "tool_call_id": tool_call.id,
@@ -650,7 +650,7 @@ class Tool_Agent(Agent):
                             print(e, function_name, function_args, file=open(f'{output_dir}/error.txt', 'a', encoding='utf-8'))
                             if raise_error:
                                 raise e
-                            function_call_result = 'input format error'
+                            function_call_result = str(e)
                     self.messages.append(
                         {
                             "tool_call_id": tool_call.id,
@@ -829,7 +829,7 @@ class Main_Search_Agent(Agent):
                                 print(e, function_name, function_args, file=open(f'{output_dir}/error.txt', 'a', encoding='utf-8'))
                                 if raise_error:
                                     raise e
-                                function_call_result = 'input format error'
+                                function_call_result = str(e)
                     self.messages.append(
                             {
                                 "tool_call_id": tool_call.id,
